@@ -1,0 +1,396 @@
+<!doctype html>
+<html>
+    <head>
+
+        <title>jsPlumb - flowchart demonstration</title>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+        <!-- <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" />
+        <link href="//fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"> -->
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" />
+        <!-- <link rel="stylesheet" href="plugins/jsplumb/toolkit/jsplumbtoolkit.css" /> -->
+        <link rel="stylesheet" href="plugins/jsplumb/editable-connectors/editable-connectors.css" />
+
+        <style>
+            .canvas {
+                resize: both;
+                overflow: scroll !important;
+                background-color: #3b3b3b;
+                height: 600px;
+                display: flex;
+                position:relative;
+                padding: 60px;
+            }
+
+            .jsplumb-table{
+                display: flex;
+                position: absolute;
+                min-width: 300px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div id='base_table' style="display: none;">
+            <ul id='{{table_id}}' class="list-group jsplumb-table" style="display:none">
+                <li class="list-group-item active d-flex justify-content-between align-items-center">
+                    {{table}}
+                    <span class="badge badge-primary badge-pill add-element">+</span>
+                </li>
+                <li id='{{field_id}}' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                    id
+                    <span>
+                        <select>
+                            <option>selecione</option>
+                            <option>varchar</option>
+                        </select>
+                        <span>P<input type='checkbox'> </span>
+                        <span>R<input type='checkbox'> </span>
+                    </span>
+                </li>
+            </ul>
+        </div>
+
+        <div>
+            <div class="canvas" id="canvas" > 
+                <ul id='tabela-inicial-teste' class="list-group jsplumb-table" >
+                    <li class="list-group-item active d-flex justify-content-between align-items-center">
+                        tabela-inicial-teste
+                        <span class="badge badge-primary badge-pill add-element">+</span>
+                    </li>
+                    <li id='tabela-inicial-teste>id' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>id</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span> P <input type='checkbox'> </span>
+                            <span> R <input type='checkbox'> </span>
+                        </span>
+                    </li>
+                    <li id='tabela-inicial-teste>firstname' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>firstname</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                    <li id='tabela-inicial-teste>lastname' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>lastname</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                    <li id='tabela-inicial-teste>password' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>password</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                    <li id='tabela-inicial-teste>timecreated' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>timecreated</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                </ul>
+
+                <ul id='tabela-telefone' class="list-group jsplumb-table" style="left: 540px; top: 60px;">
+                    <li class="list-group-item active d-flex justify-content-between align-items-center" >
+                        tabela-telefone
+                        <span class="badge badge-primary badge-pill add-element">+</span>
+                    </li>
+                    <li id='tabela-telefone-teste>id' class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>id</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                    <li id='tabela-telefone>userid--tabela-inicial-teste>id'class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>userid</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                    <li id='tabela-telefone-teste>fone'class="list-group-item d-flex justify-content-between align-items-center" data-info="">
+                        <span class='tablename'>fone</span>
+                        <span>
+                            <select>
+                                <option>selecione</option>
+                                <option>varchar</option>
+                            </select>
+                            <span>P<input type='checkbox'> </span>
+                            <span>R<input type='checkbox'> </span>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+            <!-- /demo -->
+        </div>
+
+        <!-- JS -->
+        <script src="plugins/jsplumb/jsplumb.min.js"></script>
+        
+        <!-- /JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+        <script>
+
+            var instance = window.jsp = jsPlumb.getInstance({
+                DragOptions: {cursor: 'cursor', zIndex: 2000}
+            });
+
+            var basicType = {
+                connector: "StateMachine",
+                paintStyle: {stroke: "red", strokeWidth: 4},
+                hoverPaintStyle: {stroke: "red"},
+                overlays: ["Arrow"]
+            };
+
+            instance.registerConnectionType("basic", basicType);
+
+            // this is the paint style for the connecting lines..
+            var connectorPaintStyle = {
+                strokeWidth: 1,
+                stroke: "#666666",
+                joinstyle: "round",
+                outlineStroke: "#000000",
+                outlineWidth: 1
+            }
+
+            // .. and this is the hover style for the connecting lines..
+            connectorHoverStyle = {
+                //strokeWidth: 1,
+                stroke: "#FF0000",
+                outlineWidth: 1,
+                outlineStroke: "#FF0000"
+            }
+
+            endpointHoverStyle = {
+                fill: "#216477",
+                stroke: "#216477"
+            }
+
+            // https://docs.jsplumbtoolkit.com/toolkit/current/articles/connectors.html#editable-flowchart
+            // the definition of source endpoints (the small blue ones)
+            sourceEndpoint = {
+                endpoint: "Rectangle",
+                EndpointStyle: {width: 20, height: 16, stroke: '#666'},
+                paintStyle: {width: 5, height: 20, fill: "#666"},
+                isSource: true,
+                connector: ["Flowchart", {gap: 0, cornerRadius: 2, alwaysRespectStubs: false}],
+                connectorStyle: connectorPaintStyle,
+                hoverPaintStyle: endpointHoverStyle,
+                connectorHoverStyle: connectorHoverStyle,
+                overlays: [
+                    //[ "Label", { location: [-6, 0], label: "[1,n]", cssClass: "", visible:true } ]
+                ]
+            }
+
+            // the definition of target endpoints (will appear when the user drags a connection)
+            targetEndpoint = {
+                endpoint: "Rectangle",
+                paintStyle: {width: 5, height: 20, fill: "#7AB02C", top: 5},
+                hoverPaintStyle: endpointHoverStyle,
+                connector: ["Flowchart", {gap: 0, cornerRadius: 2, alwaysRespectStubs: false}],
+                maxConnections: -1,
+                dropOptions: {hoverClass: "hover", activeClass: "active"},
+                isTarget: true,
+                overlays: [
+                    //[ "Label", { location: [6, 0], label: "[1,n]", cssClass: "", visible:true } ]
+                ]
+            }
+
+            /*init = function (connection) {
+             connection.getOverlay("label").setLabel(connection.sourceId.substring(15) + "-" + connection.targetId.substring(15));
+             };*/
+
+            function _addEndpoints(toId, sourceAnchors, targetAnchors) {
+                //Add source element on the row
+                for (var i = 0; i < sourceAnchors.length; i++) {
+                    var sourceUUID = toId + sourceAnchors[i];
+                    instance.addEndpoint("" + toId, sourceEndpoint, {
+                        anchor: sourceAnchors[i], uuid: sourceUUID
+                    });
+                }
+
+                //Add target element on the row
+                for (var j = 0; j < targetAnchors.length; j++) {
+                    var targetUUID = toId + targetAnchors[j];
+                    instance.addEndpoint("" + toId, targetEndpoint, {anchor: targetAnchors[j], uuid: targetUUID});
+                }
+
+            }
+
+
+            function _addConnections(element) {
+                if (typeof $(element).attr('id') !== 'undefined') {
+                    _addEndpoints($(element).attr('id'), ["LeftMiddle"], ["RightMiddle"]);
+                } else {
+                    _addEndpoints($(element).parent().attr('id'), [], ["TopCenter"]);
+                }
+            }
+
+            $('#canvas .jsplumb-table').find('li').each(function (i, item) {
+                _addConnections($(this));
+            });
+
+            // make all the window divs draggable - use other selector
+            instance.draggable(jsPlumb.getSelector("#canvas .jsplumb-table"), {grid: [20, 20]});
+
+            // connect a few up
+            $('.jsplumb-table').find('li').each(function (i, item) {
+                if (typeof $(this).attr('id') !== 'undefined') {
+                    var connection = $(this).attr('id').split("--");
+                    if (connection.length == 2) {
+                        instance.connect({uuids: [connection[0] + "--" + connection[1] + "LeftMiddle", connection[1] + "RightMiddle"]});
+                    }
+                }
+            });
+
+            // listen for clicks on connections, and offer to delete connections on click.
+            instance.bind("click", function (connection, originalEvent) {
+                originalEvent.preventDefault();
+                if (confirm("Delete connection from " + connection.sourceId + " to " + connection.targetId + "?")) {
+                    target = document.getElementById(connection.target.id).id.split("--")[0];
+                    connection.target.id = target;
+                    instance.deleteConnection(connection);
+                }
+            });
+
+            instance.bind("connection", function (connection) { //
+
+                if (connection.target.tagName == 'UL') {
+                    instance.deleteConnection(connection.connection);
+                    var id = buildLine(connection.target, connection.source.innerHTML, connection.source.id);
+                    instance.connect({uuids: [connection.source.id + "LeftMiddle", id + "RightMiddle"]});
+                }
+
+                if (connection.target.tagName == 'LI') {
+                    //connection.target.id = connection.target.id + "--" + connection.source.id;
+                }
+            });
+
+            /*instance.bind("connectionDrag", function (connection) {
+             console.log("connection " + connection.id + " is being dragged. suspendedElement is ", connection.suspendedElement, " of type ", connection.suspendedElementType);
+             });*/
+
+            /*instance.bind("connectionDragStop", function (connection) {
+             if (connection.connector == null) {
+             var novo = connection.sourceId.split("--")[0];
+             document.getElementById(connection.sourceId).id = novo;
+             }
+             });*/
+
+            function buildLine(element, name, parent = "") {
+                var id = "";
+
+                if (parent != "") {
+                    id = $(element).attr('id') + ">" + name + "--" + parent;
+                } else {
+                    id = $(element).attr('id') + ">" + name;
+                }
+
+                var value = "<li id='" + id + "' class='list-group-item'>" + name + "</li>";
+                $(element).append(value);
+                _addEndpoints(id, ["LeftMiddle"], ["RightMiddle"]);
+                return id;
+            }
+
+
+            //
+            $("#canvas").on('click', '.add-element', function () {
+                field = prompt("Name of the field", 'base');
+                if (field == null || field == '') {
+                    return;
+                }
+                buildLine($(this).parent().parent(), field);
+            });
+
+            //Change field name
+            $('#canvas').on('dblclick', 'li', function () {
+
+                table = prompt("Name of the field", 'base');
+
+                if (table == null || table == '') {
+                    return;
+                }
+
+                var oldId = $(this).attr('id');
+                var newId = $(this).parent().attr('id') + ">" + table;
+
+                $('#canvas li').each(function (i, el) {
+                    if (el.id.indexOf(oldId) > -1) {
+                        //el.id = el.id.replace(oldId, newId);
+                        $(el).find('.tablename').html(table);
+                    }
+                });
+            });
+
+            $('#canvas').on('contextmenu', function (e) {
+                e.preventDefault();
+                table = prompt("Name of the field", 'base');
+                if (table == null || table == '') {
+                    return;
+                }
+                console.log(table);
+                var base = $('#base_table').html();
+
+                base = base.replace("{{table_id}}", table);
+
+                header = "top:" + e.originalEvent.clientY + "px;";
+                header += "left:" + e.originalEvent.clientX + "px;";
+
+                base = base.replace("display:none", header);
+                base = base.replace("{{table}}", table);
+
+                base = base.replace("{{field_id}}", table + ">id");
+
+                $('#canvas').append(base);
+                var tableId = "#" + table;
+
+                $(tableId).find('li').each(function (i, item) {
+                    instance.draggable(jsPlumb.getSelector(tableId), {grid: [20, 20]});
+                    _addConnections($(this));
+                });
+
+            });
+
+        </script>
+
+    </body>
+</html>
