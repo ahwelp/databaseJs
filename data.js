@@ -36,6 +36,14 @@ var data = {
     ],
     "constraints" : [
         {
+            'origin': { 'table': 'user',        'field': 'id',     'nominal': false },
+            'target': { 'table': 'user_config', 'field': 'userid', 'nominal': true },
+            'dots' : [
+                {'x' : 451, 'y' : 300 },
+                {'x' : 451, 'y' : 526 },
+            ]
+        },
+        {
             'origin': { 'table': 'user',  'field': 'id',     'nominal': false },
             'target': { 'table': 'fone', 'field': 'userid', 'nominal': true },
             'dots' : [
@@ -43,13 +51,5 @@ var data = {
                 {'x' : 969, 'y' : 358 },
             ]
         },
-        {
-            'origin': { 'table': 'user',        'field': 'id',     'nominal': false },
-            'target': { 'table': 'user_config', 'field': 'userid', 'nominal': true },
-            'dots' : [
-                {'x' : 451, 'y' : 300 },
-                {'x' : 451, 'y' : 526 },
-            ]
-        }
     ]
 }

@@ -58,7 +58,7 @@
         dataFields += "data-originfield='"+originField+"'";
         dataFields += "data-targetfield='"+targetField+"'";
 
-        return "<svg "+dataFields+"> <g class='lines'></g> <g class='dots'></g> </svg>";
+        return "<svg "+dataFields+" style='position:absolute;'> <g class='lines'></g> <g class='dots'></g> </svg>";
     }
 
     /*
@@ -79,63 +79,15 @@
     DatabaseJs.getSVG = function(element1, element2, originField, targetField){
         return $('[data-origintable="'+$(element1).attr('id')+'"][data-targettable="'+$(element2).attr('id')+'"][data-originfield="'+originField+'"][data-targetfield="'+targetField+'"]');
     };
-    /*
-     * DatabaseJs.calculateSVGSize 
-     *
-     *
-     */
-    DatabaseJs.calculateSVGSize = function(element1, element2){
-        var rel = null; // Right element
-        var lel = null; // Left element
-        if( $(element1).position().left + $(element1).width() > $(element2).position().left + $(element2).width() ){
-            rel = element1; 
-        }else{
-            rel = element2;
-        }
-        if( $(element1).position().left < $(element2).position().left ){
-            lel = element1; 
-        }else{
-            lel = element2; 
-        }
 
-        var tel = null; // Top element
-        var bel = null; // Bottom element
-        if($(element1).position().top < $(element2).position().top ){
-            tel = element1;
-        }else{
-            tel = element2;
-        }
-
-        if( $(element1).position().top + $(element1).height() > $(element2).position().top + $(element2).height() ){
-            bel = element1;
-        }else{
-            bel = element2;
-        }
-
-        return {
-            "width" : $(rel).position().left + $(rel).width() ,
-            "height" : $(bel).position().top + $(bel).height(),
-            "left" : parseFloat( $(lel).css('left').replace('px', '')),
-            "top" : parseFloat( $(tel).css('top').replace('px', '')),
-        };
-    }
- 
     /*
      * DatabaseJs.recalculateSVG 
      *
      *
      */
     DatabaseJs.recalculateSVG = function(svg){
-        var element1 = $('#'+$(svg).data('origintable') )
-        var element2 = $('#'+$(svg).data('targettable') )
-        var dimensions = DatabaseJs.calculateSVGSize(element1, element2);
-
-        $(svg).attr('width', dimensions.width );
-        $(svg).attr('height', dimensions.height );
-
-        $(svg).css('top', dimensions.top );
-        $(svg).css('left', dimensions.left );
-        $(svg).css('position', 'absolute');
+        $(svg).css('width', this.canvas[0].scrollWidth );
+        $(svg).css('height', this.canvas[0].scrollHeight );
     }
     
     /*
@@ -149,19 +101,16 @@
         element1 = $('#'+$(element1).attr('id'));
         element2 = $('#'+$(element2).attr('id'));
 
-        var x1 = ( parseFloat( $(element1).css('left').replace('px', '')) + $(element1).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
-        var y1 = ( parseFloat( $(element1).css('top').replace('px', ''))  + $(element1).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
+        var x1 = parseInt($(element1).css('left').replace('px', '')) + $(element1).height() / 2;
+        var y1 = parseInt($(element1).css('top').replace('px', '')) + $(element1).width() / 2;
 
-        var x2 = ( parseFloat( $(element2).css('left').replace('px', '')) + $(element2).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
-        var y2 = ( parseFloat( $(element2).css('top').replace('px', ''))  + $(element2).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
-
-        var offsetTop = $(element1).height() / 2;
-        var offsetLeft = $(element1).width() / 2;
+        var x2 = parseInt($(element2).css('left').replace('px', '')) + $(element2).height() / 2;
+        var y2 = parseInt($(element2).css('top').replace('px', '')) + $(element2).width() / 2;;
 
         var points = "";
         points += "<circle class='origin' cx='"+x1+"' cy='"+y1+"' r='3' data-table='"+$(element1).attr('id')+"' />";
         if(dots == null || dots == []){
-            points += "<circle cx='"+(Math.abs(x1-x2) - offsetLeft)+"' cy='"+( Math.abs(y1-y2) + offsetTop )+"' r='3' />";
+            points += "<circle cx='"+Math.abs(x1-x2)+"' cy='"+Math.abs(y1-y2)+"' r='3' />";
         }else{
             for(i in dots){
                 points += "<circle cx='"+dots[i].x+"' cy='"+dots[i].y+"' r='3' />";
@@ -173,15 +122,15 @@
 
 
     /*
-     * DatabaseJs.createDot
+     * DatabaseJs.recalculateDot
      *
      *
      */
     DatabaseJs.recalculateDot = function(dot, svg){
         var table = $('#'+$(dot).data('table'));
-        
-        var x = ( parseFloat( $(table).css('left').replace('px', '')) + $(table).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
-        var y = ( parseFloat( $(table).css('top').replace('px', ''))  + $(table).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
+
+        var x = parseInt($(table).css('left').replace('px', '')) + $(table).height() / 2;
+        var y = parseInt($(table).css('top').replace('px', '')) + $(table).width() / 2;
 
         $(dot).attr('cx', x );
         $(dot).attr('cy', y );
@@ -222,10 +171,10 @@
         var oldElement = null;
         $(svg).find('circle').each(function(i, el){
             if(oldElement == null){ oldElement = el; return;  }
-            var x1 = $(oldElement).attr('cx') //- parseFloat( $(svg).css('left').replace('px', '') ) 
-            var y1 = $(oldElement).attr('cy') //- parseFloat( $(svg).css('top').replace('px', '') )
-            var x2 = $(el).attr('cx') - $(oldElement).attr('cx') //- $(svg).css('left').replace('px', '') 
-            var y2 = $(el).attr('cy') - $(oldElement).attr('cy') // -$(svg).css('top').replace('px', '')  
+            var x1 = $(oldElement).attr('cx') 
+            var y1 = $(oldElement).attr('cy') 
+            var x2 = $(el).attr('cx') - $(oldElement).attr('cx')
+            var y2 = $(el).attr('cy') - $(oldElement).attr('cy')
             lines += "<path d='M "+x1+" "+y1+" l "+x2+" "+y2+"' stroke-width='3' />"
             oldElement = el;
         }); 
@@ -283,20 +232,23 @@
                     data.constraints[i].target.field,
                 )
             );
+
             var svg = DatabaseJs.getSVG(
                 $('#'+data.constraints[i].origin.table),
                 $('#'+data.constraints[i].target.table),
                 data.constraints[i].origin.field,
                 data.constraints[i].target.field,
             );
+
             DatabaseJs.recalculateSVG(svg);
-            // DatabaseJs.createDots = function( element1, element2, svg, dots = null ){
+
             DatabaseJs.createDots(
                 $('#'+data.constraints[i].origin.table),
                 $('#'+data.constraints[i].target.table),
                 svg,
                 data.constraints[i].dots
             );
+
             DatabaseJs.refresh();
         }
 
