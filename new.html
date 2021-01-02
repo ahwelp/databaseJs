@@ -38,8 +38,10 @@
             }
 
             .canvas svg circle:not(.origin){
-                stroke: yellow;
                 cursor: pointer;
+                stroke: yellow;
+                fill:   yellow;
+                z-index: 5;
             }
 
             .db-table .datatype{
@@ -67,13 +69,11 @@
             $('.canvas').databaseJs();
             $('.canvas').databaseJs('buildModel', data);
 
-            //console.log(data)
-            // ###################################################
             //https://www.w3schools.com/graphics/svg_path.asp
             var creatingPath = false;
             var originTable = null;
 
-            $('.canvas ul').on('click', function(e){
+            $('.canvas').on('click', 'ul', function(e){
                 if(creatingPath == false){ return; }
                 if(originTable == null){
                     originTable = e.currentTarget;
@@ -97,9 +97,7 @@
             });
 
             //####################################################
-            $('#save').on('click', function(){
-                $('.canvas').databaseJs('export');
-            });
+            $('#save').on('click', function(){ console.log( $('.canvas').databaseJs('export') ); });
 
         </script>
 

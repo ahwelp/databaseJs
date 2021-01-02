@@ -18,7 +18,7 @@ var data = {
             "left" : 927,
             "fields" : [
                 { 'name' : 'id',     'type' : 'serial'  },
-                //{ 'name' : 'userid', 'type' : 'numeric' },
+                { 'name' : 'userid', 'type' : 'numeric' },
                 { 'name' : 'number', 'type' : 'varchar' },
             ]
         },
@@ -34,21 +34,22 @@ var data = {
             ]
         }
     ],
-    "relations" : [
+    "constraints" : [
         {
             'origin': { 'table': 'user',  'field': 'id',     'nominal': false },
-            'target': { 'table': 'phone', 'field': 'userid', 'nominal': true },
+            'target': { 'table': 'fone', 'field': 'userid', 'nominal': true },
             'dots' : [
-                {'x' : 969.015625, 'y' : 219.015625 },
+                {'x' : 535, 'y' : 358 },
+                {'x' : 969, 'y' : 358 },
             ]
         },
         {
             'origin': { 'table': 'user',        'field': 'id',     'nominal': false },
             'target': { 'table': 'user_config', 'field': 'userid', 'nominal': true },
             'dots' : [
-                {'x' : 15, 'y' : 20 },
+                {'x' : 451, 'y' : 300 },
+                {'x' : 451, 'y' : 526 },
             ]
         }
     ]
 }
-

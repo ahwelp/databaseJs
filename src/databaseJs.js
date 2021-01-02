@@ -45,6 +45,21 @@
     DatabaseJs.cloneField = function(originTable, originField, targetTable, targetField){
 
     }
+    /*
+     * DatabaseJs.buildSVG 
+     *
+     *
+     */
+
+    DatabaseJs.buildSVG = function(element1, element2, originField, targetField){
+        var dataFields = "";
+        dataFields += "data-origintable='"+$(element1).attr('id')+"'";
+        dataFields += "data-targettable='"+$(element2).attr('id')+"'";
+        dataFields += "data-originfield='"+originField+"'";
+        dataFields += "data-targetfield='"+targetField+"'";
+
+        return "<svg "+dataFields+"> <g class='lines'></g> <g class='dots'></g> </svg>";
+    }
 
     /*
      * DatabaseJs.createSVG 
@@ -52,17 +67,18 @@
      *
      */
     DatabaseJs.createSVG = function(element1, element2, originField, targetField){
-        var dataFields = "";
-        dataFields += "data-origintable='"+$(element1).attr('id')+"'";
-        dataFields += "data-targettable='"+$(element2).attr('id')+"'";
-        dataFields += "data-originfield='"+originField+"'";
-        dataFields += "data-targetfield='"+targetField+"'";
-
-        var svg = "<svg "+dataFields+" > <g class='lines'></g> <g class='dots'></g> </svg>";
+        var svg = DatabaseJs.buildSVG(element1, element2, originField, targetField);
         $(this.canvas).html( $(this.canvas).html() + svg );
-        return $('[data-origintable="'+$(element1).attr('id')+'"][data-targettable="'+$(element2).attr('id')+'"][data-originfield="'+originField+'"][data-targetfield="'+targetField+'"]');
+        return DatabaseJs.getSVG(element1, element2, originField, targetField) 
     }
 
+    /*
+     * DatabaseJs.getSVG 
+     *
+     */
+    DatabaseJs.getSVG = function(element1, element2, originField, targetField){
+        return $('[data-origintable="'+$(element1).attr('id')+'"][data-targettable="'+$(element2).attr('id')+'"][data-originfield="'+originField+'"][data-targetfield="'+targetField+'"]');
+    };
     /*
      * DatabaseJs.calculateSVGSize 
      *
@@ -99,8 +115,8 @@
         return {
             "width" : $(rel).position().left + $(rel).width() ,
             "height" : $(bel).position().top + $(bel).height(),
-            "left" : $(lel).position().left,
-            "top" : $(tel).position().top,
+            "left" : parseFloat( $(lel).css('left').replace('px', '')),
+            "top" : parseFloat( $(tel).css('top').replace('px', '')),
         };
     }
  
@@ -133,18 +149,18 @@
         element1 = $('#'+$(element1).attr('id'));
         element2 = $('#'+$(element2).attr('id'));
 
-        var x1 = ( $(element1).position().left + $(element1).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
-        var y1 = ( $(element1).position().top  + $(element1).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
+        var x1 = ( parseFloat( $(element1).css('left').replace('px', '')) + $(element1).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
+        var y1 = ( parseFloat( $(element1).css('top').replace('px', ''))  + $(element1).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
 
-        var x2 = ( $(element2).position().left + $(element2).width() / 2 ) - parseFloat( $(svg).css('left').replace('px', '') )
-        var y2 = ( $(element2).position().top  + $(element2).height() / 2 ) - parseFloat( $(svg).css('top').replace('px', '') )
+        var x2 = ( parseFloat( $(element2).css('left').replace('px', '')) + $(element2).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
+        var y2 = ( parseFloat( $(element2).css('top').replace('px', ''))  + $(element2).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
 
         var offsetTop = $(element1).height() / 2;
         var offsetLeft = $(element1).width() / 2;
 
         var points = "";
         points += "<circle class='origin' cx='"+x1+"' cy='"+y1+"' r='3' data-table='"+$(element1).attr('id')+"' />";
-        if(dots == null){
+        if(dots == null || dots == []){
             points += "<circle cx='"+(Math.abs(x1-x2) - offsetLeft)+"' cy='"+( Math.abs(y1-y2) + offsetTop )+"' r='3' />";
         }else{
             for(i in dots){
@@ -157,22 +173,33 @@
 
 
     /*
-     * DatabaseJs.createDots 
+     * DatabaseJs.createDot
      *
      *
      */
-    DatabaseJs.recalculateDots = function(dot, svg){
+    DatabaseJs.recalculateDot = function(dot, svg){
         var table = $('#'+$(dot).data('table'));
         
-        var top = parseFloat( $(svg).css('top').replace('px', '') )
-        var left = parseFloat( $(svg).css('left').replace('px', '') )
+        var x = ( parseFloat( $(table).css('left').replace('px', '')) + $(table).width() / 2) - parseFloat( $(svg).css('left').replace('px', '') ) 
+        var y = ( parseFloat( $(table).css('top').replace('px', ''))  + $(table).height() / 2) - parseFloat( $(svg).css('top').replace('px', '') )
 
-        $(dot).attr('cx', ( $(table).position().left + $(table).width() / 2) - left );
-        $(dot).attr('cy',  ( $(table).position().top  + $(table).height() / 2) - top );
+        $(dot).attr('cx', x );
+        $(dot).attr('cy', y );
 
         DatabaseJs.recalculatePaths(svg);
     }
 
+    /*
+     * DatabaseJs.createDots
+     *
+     *
+     */
+    DatabaseJs.recalculateDots = function(svg){
+        $(svg).find('.origin').each(function(i, el){
+            DatabaseJs.recalculateDot(el, svg);
+        });
+        
+    }
     /*
      * DatabaseJs.createPath 
      *
@@ -204,7 +231,17 @@
         }); 
         $(svg).find('.lines').html(lines);
     }
-
+    
+    /*
+     * DatabaseJs.refresh 
+     *
+     *
+     */
+    DatabaseJs.refresh = function(){
+        $( DatabaseJs.canvas ).find('svg').each(function(){
+            DatabaseJs.recalculatePaths(this);
+        });
+    }
 
     //
     // _____     _     _        _____      _ _   _       _   _             
@@ -218,33 +255,84 @@
     /*
      * DatabaseJs.buildTables 
      *
+     *
      */
     DatabaseJs.buildTables = function(){
-        var tables = "";
         for(i in data.tables){
+            var options = '<div style="float: right;">';
+            options += "<span class='add_field'>+</span> ";
+            options += "<span class='table_collapse'>^</span>";
+            options += '</div>';
+
             var table = data.tables[i];
-            tables += "<ul id='"+table.name+"' class='list-group db-table' style='left:"+table.left+"px; top:"+table.top+"px'>";
-            tables += "<li class='list-group-item active'>"+table.name+"</li>";
-            tables += DatabaseJs.buildFields(table.fields);
-            tables += "</ul>";
+            var content = '';
+            content += "<ul id='"+table.name+"' class='list-group db-table' style='left:"+table.left+"px; top:"+table.top+"px'>";
+            content += "<li class='list-group-item active'>"+table.name+options+"</li>";
+            content += DatabaseJs.buildFields(table.fields);
+            content += "</ul>";
+
+            $( DatabaseJs.canvas).html( $( DatabaseJs.canvas ).html() + content );
         }
-        for(i in data.relations){
-            tables += DatabaseJs.buildConnection(data.relations[i]);
+
+        for(i in data.constraints){
+            $( DatabaseJs.canvas).html( $( DatabaseJs.canvas ).html() + 
+                DatabaseJs.buildSVG(
+                    $('#'+data.constraints[i].origin.table),
+                    $('#'+data.constraints[i].target.table),
+                    data.constraints[i].origin.field,
+                    data.constraints[i].target.field,
+                )
+            );
+            var svg = DatabaseJs.getSVG(
+                $('#'+data.constraints[i].origin.table),
+                $('#'+data.constraints[i].target.table),
+                data.constraints[i].origin.field,
+                data.constraints[i].target.field,
+            );
+            DatabaseJs.recalculateSVG(svg);
+            // DatabaseJs.createDots = function( element1, element2, svg, dots = null ){
+            DatabaseJs.createDots(
+                $('#'+data.constraints[i].origin.table),
+                $('#'+data.constraints[i].target.table),
+                svg,
+                data.constraints[i].dots
+            );
+            DatabaseJs.refresh();
         }
-        $( DatabaseJs.canvas ).html(tables);
+
     }
 
     /*
+     * DatabaseJs.buildField
+     *
+     *
+     */
+    DatabaseJs.buildField = function(field){
+        return "<li data-field='"+field.name+"' class='list-group-item db-row'> <label>*</label> <span class='field_name'>"+field.name + "</span>" + DatabaseJs.buildSelect(field.type)+"</li>"
+    }
+
+
+    /*
      * DatabaseJs.buildFields 
+     *
      *
      */
     DatabaseJs.buildFields = function(fields){
         var ret = "";
         for(j in fields){
-            var field = fields[j];
-            ret+= "<li data-field='"+field.name+"' class='list-group-item db-row'> <label>*</label> "+field.name + DatabaseJs.buildSelect(field.type)+"</li>"
+            ret+= DatabaseJs.buildField(fields[j]);
         }
         return ret;
+    }
+    /*
+     * DatabaseJs.buildFields 
+     *
+     * @param field Field name
+     * @param table Table to append field 
+     *
+     */
+    DatabaseJs.appendField = function(field, table){
+        $(table).html( $(table).html() + DatabaseJs.buildField({'name' : field, 'type': 'varchar'}) );
     }
    
     /*
@@ -265,14 +353,6 @@
     }
 
     /*
-     * DatabaseJs.buildConnection 
-     *
-     */
-    DatabaseJs.buildConnection = function(connection){
-        console.log(connection)
-    }
-
-    /*
      * DatabaseJs.exportContent 
      *
      *
@@ -280,15 +360,21 @@
     DatabaseJs.exportContent = function(){
         var tables = {'tables' : [] };
         $('.canvas ul').each(function (i, el){
-            var table = {};
-            table.name = $(el).attr('id');
-            table.left = parseFloat( $(el).css('left').replace('px', '') )
-            table.top  = parseFloat( $(el).css('top').replace('px', '') ) 
+            var table = {
+                "name"   : $(el).attr('id'),
+                "left"   : parseFloat( $(el).css('left').replace('px', '') ),
+                "top"    : parseFloat( $(el).css('top').replace('px', '') ),
+                "fields" : [] 
+            }
             $(el).find('li').each(function(j, inel){
-
+                table.fields.push({
+                    "name" : $(inel).data('field'),
+                    "type" : $(inel).find('select').val() 
+                });
             });
             tables.tables.push(table)
         });
+        return tables;
     }
 
     /*
@@ -305,10 +391,14 @@
                     DatabaseJs.createConnection(originTable, targetTable, targetField, originField);
                     break;
                 case 'export' :
-                    DatabaseJs.exportContent()
+                    return DatabaseJs.exportContent()
                     break;
                 case 'buildModel':
                     DatabaseJs.buildTables(originTable)
+                    break;
+                case 'refresh':
+                    DatabaseJs.refresh();
+                    break;
             }
         }
 
@@ -320,12 +410,14 @@
 
         DatabaseJs.canvas = this;
 
+        //
         $(this).on('mousedown', 'ul > li:first-of-type', function(e){
             e.preventDefault();
             dragging = true;
             dragElement = e.currentTarget;
         });
 
+        //
         $(this).on('mousemove', function(e){
             if(dragging){
                 var newx = e.currentTarget.scrollLeft + e.originalEvent.clientX; 
@@ -337,6 +429,7 @@
                     $(dragElement).parent().css('left', newx ).trigger('move');
                     moved = true;
                 }
+
                 if( newy - startOffsetY > dragStep || Math.abs(startOffsetY - newy) > dragStep ){
                     startOffsetY = newy; 
                     $(dragElement).parent().css('top', newy ).trigger('move'); 
@@ -344,9 +437,9 @@
                 }
 
                 if(moved){
-                    $('svg .origin').each(function(){
-                        DatabaseJs.recalculateDots(this, $(this).parent().parent());
-                    })
+                    var svg = $(dragElement).parent().attr('id');
+                    svg = $("[data-origintable='"+svg+"'], [data-targettable='"+svg+"']");
+                    if(svg.length > 0){ DatabaseJs.recalculateDots(svg); }
                 }
             }
 
@@ -354,23 +447,18 @@
                 $(pointInDrag).attr('cx', e.originalEvent.clientX - $(pointInDrag).parent().parent().position().left );
                 $(pointInDrag).attr('cy', e.originalEvent.clientY - $(pointInDrag).parent().parent().position().top );
                 $(pointInDrag).parent().parent().trigger('change');
-                DatabaseJs.recalculatePaths($(pointInDrag).parent().parent() );
+                DatabaseJs.recalculatePaths( $(pointInDrag).parent().parent() );
             }
+
         });
 
+        //Cancel draggin stuff
         $('html').on('mouseup', function(e){
             e.preventDefault();
             dragElement = null; 
             dragging = false;
             pointInDrag = null; //SVG
             pointDragging = false; //SVG
-        });
-
-        //Connection scripts
-        //########################################################
-        $(this).on('mousedown', 'circle:not(.origin)', function(){
-            pointInDrag = $(this);
-            pointDragging = true;
         });
 
         // Table element moving. Search and move child dots
@@ -388,11 +476,43 @@
             var x = ( $(this).position().left + $(this).width() / 2) - left;
             var y = ( $(this).position().top  + $(this).height() / 2) - top;
 
-            $(element).attr('cx', ( $(this).position().left + $(this).width() / 2) - left );
-            $(element).attr('cy',  ( $(this).position().top  + $(this).height() / 2) - top );
-
             DatabaseJs.recalculateSVG(svg);
+            DatabaseJs.recalculateDots(svg);
             DatabaseJs.recalculatePaths(svg);
+        });
+
+        //Connection scripts
+        $(this).on('mousedown', 'circle:not(.origin)', function(){
+            pointInDrag = $(this);
+            pointDragging = true;
+        });
+
+        //Create a new dot on a existing path
+        $(this).on('dblclick', 'path', function(e){
+            console.log(e);
+        });
+        
+        // Click on the + icon on the top right
+        $(this).on('click', '.add_field', function(e){
+            var fieldName = prompt('Field name'); 
+            if(fieldName == null || fieldName == ''){ return; }
+            DatabaseJs.appendField(fieldName, $(e.currentTarget).parent().parent().parent() )
+        });
+
+        $(this).on('contextmenu', 'li', function(e){
+            e.preventDefault();
+
+            var element = e.currentTarget;
+            var table   = $(element).parent();
+
+            if( confirm("Delete field and it's connections?") ){
+                DatabaseJs.deleteField(element);
+            }
+
+        });
+
+        $(this).on('contextmenu', '.add_field', function(e){
+            e.preventDefault();
         });
 
     }
