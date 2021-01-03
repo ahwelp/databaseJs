@@ -2,7 +2,7 @@
 <html>
     <head>
 
-        <title>jsPlumb - flowchart demonstration</title>
+        <title>databaseJs</title>
         <meta http-equiv="content-type" content="text/html;charset=utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
 
@@ -19,29 +19,39 @@
                 height: 600px;
                 display: flex;
                 position:relative;
+                user-select: none;
             }
 
             .canvas ul{
                 display: flex;
                 position: absolute;
                 min-width: 300px;
-                z-index: 2;
+                z-index: 1;
+            }
+
+            .canvas ul .collapsed{
+                display:none;
             }
 
             .canvas svg{
                 stroke: #000;
-                z-index: 1;
+                pointer-events: none !important; /* Make click transparent */
+            }
+
+            .canvas svg path{
+                pointer-events: auto !important; /* Map click back */
             }
 
             .canvas svg path:hover{
+                cursor: pointer;
                 stroke: red !important;
             }
 
-            .canvas svg circle:not(.origin){
+            .canvas circle:not(.origin){
+                position: absolute;
+                pointer-events: auto !important; /* Map click back */
                 cursor: pointer;
-                stroke: yellow;
                 fill:   yellow;
-                z-index: 5;
             }
 
             .db-table .datatype{
@@ -61,13 +71,46 @@
 
         <input id='connect' type='checkbox' />
         <button id='save'> Save </button>
+        <button id='panic'> !PANIC! </button>
+        <button id='diff'> Diff </button>
+        <button id='push_version'> Push </button>
+        <div id='display'></div>
 
         <script src='data.js'></script>
         <script src='src/databaseJs.js'></script>
+        <script src="src/diff.js"></script> <!-- Library to create diffs of versions. Remove on the future -->
 
         <script>
             $('.canvas').databaseJs();
-            $('.canvas').databaseJs('buildModel', data);
+
+            $('.canvas').databaseJs('buildModel', buildHistory() );
+            function buildHistory(revision = -1){
+                var hist = JSON.parse( localStorage.getItem('revisions') );
+
+                if (hist == null){ hist = []; }
+                if(revision == -1){ revision = hist.length; }
+
+                var base = JSON.stringify(data, null, 4);
+                var result = base; 
+                
+                for (el in hist){
+                    result = Diff.applyPatch(result, hist[el] );
+                }
+
+                //return {'tables' : [], 'constraints':[]};
+                return JSON.parse(result);
+            }
+
+            $('#panic').on('click', function(){ $('.canvas').databaseJs('refresh'); });
+
+            $('#push_version').on('click', function(){
+                var hist = JSON.parse( localStorage.getItem('revisions') );
+                if (hist == null){ hist = []; }
+                var newContent = $('.canvas').databaseJs('export');
+                var revision = JSON.stringify(buildHistory(), null, 4);
+                hist.push( Diff.createPatch('databaseModel', revision, JSON.stringify(newContent, null, 4) ) );
+                localStorage.setItem( 'revisions',  JSON.stringify(hist, null, 4) );
+            });
 
             //https://www.w3schools.com/graphics/svg_path.asp
             var creatingPath = false;
@@ -89,15 +132,17 @@
 
             //#####################################################
             $('#connect').on('change', function(){
-                if (creatingPath){
-                    creatingPath = false;
-                }else{
-                    creatingPath = true;
-                }
+                if (creatingPath){ creatingPath = false; }
+                else{ creatingPath = true; }
             });
 
             //####################################################
             $('#save').on('click', function(){ console.log( $('.canvas').databaseJs('export') ); });
+
+            $('#diff').on('click', function(){
+                var newContent = $('.canvas').databaseJs('export');
+                console.log( Diff.createPatch('databaseModel', JSON.stringify(data, null, 4), JSON.stringify(newContent, null, 4)  ) );
+            });
 
         </script>
 

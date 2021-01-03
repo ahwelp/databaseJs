@@ -19,6 +19,7 @@
         { 'name' : 'char' },
         { 'name' : 'varchar' },
         { 'name' : 'date' },
+        { 'name' : 'time' },
         { 'name' : 'datetime' }
     ]
 
@@ -43,7 +44,7 @@
      *
      */
     DatabaseJs.cloneField = function(originTable, originField, targetTable, targetField){
-
+        
     }
     /*
      * DatabaseJs.buildSVG 
@@ -108,15 +109,15 @@
         var y2 = parseInt($(element2).css('top').replace('px', '')) + $(element2).width() / 2;;
 
         var points = "";
-        points += "<circle class='origin' cx='"+x1+"' cy='"+y1+"' r='3' data-table='"+$(element1).attr('id')+"' />";
+        points += "<circle class='origin' cx='"+x1+"' cy='"+y1+"' r='5' data-table='"+$(element1).attr('id')+"' />";
         if(dots == null || dots == []){
-            points += "<circle cx='"+Math.abs(x1-x2)+"' cy='"+Math.abs(y1-y2)+"' r='3' />";
+            points += "<circle cx='"+Math.abs(x1-x2)+"' cy='"+Math.abs(y1-y2)+"' r='5' />";
         }else{
             for(i in dots){
-                points += "<circle cx='"+dots[i].x+"' cy='"+dots[i].y+"' r='3' />";
+                points += "<circle cx='"+dots[i].x+"' cy='"+dots[i].y+"' r='5' />";
             }
         }
-        points += "<circle class='origin' cx='"+x2+"' cy='"+y2+"' r='3' data-table='"+$(element2).attr('id')+"' />";
+        points += "<circle class='origin' cx='"+x2+"' cy='"+y2+"' r='5' data-table='"+$(element2).attr('id')+"' />";
         $(svg).find('.dots').html(points);
     }
 
@@ -175,7 +176,7 @@
             var y1 = $(oldElement).attr('cy') 
             var x2 = $(el).attr('cx') - $(oldElement).attr('cx')
             var y2 = $(el).attr('cy') - $(oldElement).attr('cy')
-            lines += "<path d='M "+x1+" "+y1+" l "+x2+" "+y2+"' stroke-width='3' />"
+            lines += "<path stroke-dasharray='10,5'  d='M "+x1+" "+y1+" l "+x2+" "+y2+"' stroke-width='3' />"
             oldElement = el;
         }); 
         $(svg).find('.lines').html(lines);
@@ -188,6 +189,7 @@
      */
     DatabaseJs.refresh = function(){
         $( DatabaseJs.canvas ).find('svg').each(function(){
+            DatabaseJs.recalculateDots(this); 
             DatabaseJs.recalculatePaths(this);
         });
     }
@@ -206,7 +208,7 @@
      *
      *
      */
-    DatabaseJs.buildTables = function(){
+    DatabaseJs.buildTables = function(data){
         for(i in data.tables){
             var options = '<div style="float: right;">';
             options += "<span class='add_field'>+</span> ";
@@ -217,10 +219,10 @@
             var content = '';
             content += "<ul id='"+table.name+"' class='list-group db-table' style='left:"+table.left+"px; top:"+table.top+"px'>";
             content += "<li class='list-group-item active'>"+table.name+options+"</li>";
-            content += DatabaseJs.buildFields(table.fields);
+            content += DatabaseJs.buildFields(table.fields, data.tables[i].collapsed);
             content += "</ul>";
 
-            $( DatabaseJs.canvas).html( $( DatabaseJs.canvas ).html() + content );
+            $( DatabaseJs.canvas ).html( $( DatabaseJs.canvas ).html() + content );
         }
 
         for(i in data.constraints){
@@ -269,12 +271,12 @@
      *
      *
      */
-    DatabaseJs.buildFields = function(fields){
+    DatabaseJs.buildFields = function(fields, collapsed){
         var ret = "";
         for(j in fields){
             ret+= DatabaseJs.buildField(fields[j]);
         }
-        return ret;
+        if(collapsed){ return "<div class='rows collapsed'>" + ret + "</div>"; }else{ return "<div class='rows'>" + ret + "</div>"; }
     }
     /*
      * DatabaseJs.buildFields 
@@ -310,23 +312,37 @@
      *
      */
     DatabaseJs.exportContent = function(){
-        var tables = {'tables' : [] };
-        $('.canvas ul').each(function (i, el){
+        var structure = {'tables' : [], 'constraints': []};
+        $(this.canvas).find('ul').each(function (i, el){
             var table = {
                 "name"   : $(el).attr('id'),
-                "left"   : parseFloat( $(el).css('left').replace('px', '') ),
-                "top"    : parseFloat( $(el).css('top').replace('px', '') ),
+                "top"    : parseInt( $(el).css('top').replace('px', '') ),
+                "left"   : parseInt( $(el).css('left').replace('px', '') ),
                 "fields" : [] 
             }
-            $(el).find('li').each(function(j, inel){
+            $(el).find('li:not(.active)').each(function(j, inel){
                 table.fields.push({
                     "name" : $(inel).data('field'),
                     "type" : $(inel).find('select').val() 
                 });
             });
-            tables.tables.push(table)
+            structure.tables.push(table)
         });
-        return tables;
+        $(this.canvas).find('svg').each(function (i, el){
+            var dots = [];
+            $(this).find('circle').each(function(i, el){
+                if( $(el).hasClass('origin') ){ return true; }
+                dots.push({
+                    'x': parseInt( $(el).attr('cx') ),
+                    'y': parseInt( $(el).attr('cy') ) 
+                });
+            });
+            structure.constraints.push({
+                'origin': {'table': $(el).data('origintable'), 'field': $(el).data('originfield'), 'nominal':false},
+                'target': {'table': $(el).data('targettable'), 'field': $(el).data('targetfield'), 'nominal':false},
+                'dots':dots});
+        });
+        return structure;
     }
 
     /*
@@ -339,7 +355,8 @@
         if(action != null){
             switch (action){
                 case 'createConnection':
-                    DatabaseJs.cloneField(originTable, originField, targetTable, targetField);
+                    console.log(targetTable)
+                    DatabaseJs.appendField(targetField, $(targetTable).find('.rows') )
                     DatabaseJs.createConnection(originTable, targetTable, targetField, originField);
                     break;
                 case 'export' :
@@ -409,6 +426,7 @@
             e.preventDefault();
             dragElement = null; 
             dragging = false;
+            DatabaseJs.refresh();
             pointInDrag = null; //SVG
             pointDragging = false; //SVG
         });
@@ -428,9 +446,6 @@
             var x = ( $(this).position().left + $(this).width() / 2) - left;
             var y = ( $(this).position().top  + $(this).height() / 2) - top;
 
-            DatabaseJs.recalculateSVG(svg);
-            DatabaseJs.recalculateDots(svg);
-            DatabaseJs.recalculatePaths(svg);
         });
 
         //Connection scripts
@@ -439,16 +454,22 @@
             pointDragging = true;
         });
 
-        //Create a new dot on a existing path
-        $(this).on('dblclick', 'path', function(e){
-            console.log(e);
+        // DoubleClick on circle to remove-it
+         $(this).on('dblclick', 'circle:not(.origin)', function(e){
+            $(this).remove();
+            DatabaseJs.refresh();
         });
-        
+
         // Click on the + icon on the top right
         $(this).on('click', '.add_field', function(e){
             var fieldName = prompt('Field name'); 
             if(fieldName == null || fieldName == ''){ return; }
-            DatabaseJs.appendField(fieldName, $(e.currentTarget).parent().parent().parent() )
+            DatabaseJs.appendField(fieldName, $(e.currentTarget).parent().parent().parent().find('.rows') )
+        });
+
+        $(this).on('click', '.table_collapse', function(e){
+            $(this).parent().parent().parent().find('.rows').toggleClass('collapsed');
+            DatabaseJs.refresh();
         });
 
         $(this).on('contextmenu', 'li', function(e){
