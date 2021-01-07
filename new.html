@@ -43,7 +43,6 @@
             }
 
             .canvas svg path:hover{
-                cursor: pointer;
                 stroke: red !important;
             }
 
@@ -65,16 +64,19 @@
     <body>
 
         <div>
-            <div class="canvas" id="canvas" > </div>
+            <div class="canvas" id="canvas" > <p class='span'></p> </div>
             <div class="canvas2" id="canvas" > </div>
         </div>
 
-        <input id='connect' type='checkbox' />
-        <button id='save'> Save </button>
         <button id='panic'> !PANIC! </button>
         <button id='diff'> Diff </button>
         <button id='push_version'> Push </button>
+        <button id='export'> export </button>
+        <button id='import'> import </button>
+
         <div id='display'></div>
+
+        <textarea id='spool' style='width:100%; height:400px;'> </textarea>
 
         <script src='data.js'></script>
         <script src='src/databaseJs.js'></script>
@@ -84,6 +86,7 @@
             $('.canvas').databaseJs();
 
             $('.canvas').databaseJs('buildModel', buildHistory() );
+
             function buildHistory(revision = -1){
                 var hist = JSON.parse( localStorage.getItem('revisions') );
 
@@ -112,36 +115,21 @@
                 localStorage.setItem( 'revisions',  JSON.stringify(hist, null, 4) );
             });
 
-            //https://www.w3schools.com/graphics/svg_path.asp
-            var creatingPath = false;
-            var originTable = null;
-
-            $('.canvas').on('click', 'ul', function(e){
-                if(creatingPath == false){ return; }
-                if(originTable == null){
-                    originTable = e.currentTarget;
-                }else if( $(e.currentTarget).parent() ){
-                    var fieldName = prompt('Table name', $(originTable).attr('id') + "id"); 
-                    if(fieldName == null || fieldName == ''){ return; }
-                    $('.canvas').databaseJs('createConnection', originTable, e.currentTarget, fieldName); 
-                    originTable = null;
-                    creatingPath = false;
-                    $('#connect').prop('checked', false);
-                }
-            });
-
-            //#####################################################
-            $('#connect').on('change', function(){
-                if (creatingPath){ creatingPath = false; }
-                else{ creatingPath = true; }
-            });
-
             //####################################################
             $('#save').on('click', function(){ console.log( $('.canvas').databaseJs('export') ); });
 
             $('#diff').on('click', function(){
                 var newContent = $('.canvas').databaseJs('export');
-                console.log( Diff.createPatch('databaseModel', JSON.stringify(data, null, 4), JSON.stringify(newContent, null, 4)  ) );
+                $('#spool').html( Diff.createPatch('databaseModel', JSON.stringify(data, null, 4), JSON.stringify(newContent, null, 4)  ) );
+            });
+
+            $('#export').on('click', function(){
+                $('#spool').html( JSON.stringify($('.canvas').databaseJs('export'), null, 4) );
+            });
+
+            $('#import').on('click', function(){
+                alert('Não funciona ainda');
+                //$('.canvas').databaseJs('buildModel', $("#spool").html() );
             });
 
         </script>

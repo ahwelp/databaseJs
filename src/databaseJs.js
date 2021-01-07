@@ -9,9 +9,13 @@
     var startOffsetY = 0;
     var dragElement = null;
 
-    //Conection variables
+    //Point move vars
     var pointDragging = false;
     var pointInDrag = null;
+
+    //Path creation vars
+    var creatingPath = false;
+    var originTable = null;
 
 	var types = [
         { 'name' : 'serial' },
@@ -38,14 +42,6 @@
         this.recalculatePaths(svg) 
     }
 
-    /*
-     * DatabaseJs.cloneField 
-     *
-     *
-     */
-    DatabaseJs.cloneField = function(originTable, originField, targetTable, targetField){
-        
-    }
     /*
      * DatabaseJs.buildSVG 
      *
@@ -98,7 +94,7 @@
      *
      */
     DatabaseJs.createDots = function( element1, element2, svg, dots = null ){
-        //Somehow, this stoped working, so search elements by id. No sense, but it needs
+        // #crazy Somehow, this stoped working, so search elements by id. No sense, but it needs
         element1 = $('#'+$(element1).attr('id'));
         element2 = $('#'+$(element2).attr('id'));
 
@@ -121,6 +117,21 @@
         $(svg).find('.dots').html(points);
     }
 
+    /*
+     * DatabaseJs.addDot
+     *
+     * 
+     */
+    DatabaseJs.addDot = function(x, y, path, svg){
+        var number = $(path).data('number') ;
+        $(svg).find('circle').each(function(i, el){
+            if(number == i){ 
+                $(el).after("<circle cx='"+x+"' cy='"+y+"' r='5' ></circle>") 
+            }
+        });
+        $(svg).html( $(svg).html() ); // #crazy Using after wont redraw the dots. So it will be transparent
+    }
+
 
     /*
      * DatabaseJs.recalculateDot
@@ -130,8 +141,13 @@
     DatabaseJs.recalculateDot = function(dot, svg){
         var table = $('#'+$(dot).data('table'));
 
-        var x = parseInt($(table).css('left').replace('px', '')) + $(table).height() / 2;
-        var y = parseInt($(table).css('top').replace('px', '')) + $(table).width() / 2;
+        if($(table).find('div').hasClass('collapsed')){
+            var x = parseInt($(table).css('left').replace('px', '')) + $(table).height()  
+            var y = parseInt($(table).css('top').replace('px', '')) + 25
+        }else{
+            var x = parseInt($(table).css('left').replace('px', '')) + $(table).height() / 2;
+            var y = parseInt($(table).css('top').replace('px', '')) + $(table).width() / 2;
+        }
 
         $(dot).attr('cx', x );
         $(dot).attr('cy', y );
@@ -170,14 +186,16 @@
     DatabaseJs.recalculatePaths = function(svg){
         var lines = '';
         var oldElement = null;
+        var number = 0;
         $(svg).find('circle').each(function(i, el){
             if(oldElement == null){ oldElement = el; return;  }
             var x1 = $(oldElement).attr('cx') 
             var y1 = $(oldElement).attr('cy') 
             var x2 = $(el).attr('cx') - $(oldElement).attr('cx')
             var y2 = $(el).attr('cy') - $(oldElement).attr('cy')
-            lines += "<path stroke-dasharray='10,5'  d='M "+x1+" "+y1+" l "+x2+" "+y2+"' stroke-width='3' />"
+            lines += "<path d='M "+x1+" "+y1+" l "+x2+" "+y2+"' data-number='"+number+"' stroke-width='3' />"
             oldElement = el;
+            number ++;
         }); 
         $(svg).find('.lines').html(lines);
     }
@@ -210,19 +228,7 @@
      */
     DatabaseJs.buildTables = function(data){
         for(i in data.tables){
-            var options = '<div style="float: right;">';
-            options += "<span class='add_field'>+</span> ";
-            options += "<span class='table_collapse'>^</span>";
-            options += '</div>';
-
-            var table = data.tables[i];
-            var content = '';
-            content += "<ul id='"+table.name+"' class='list-group db-table' style='left:"+table.left+"px; top:"+table.top+"px'>";
-            content += "<li class='list-group-item active'>"+table.name+options+"</li>";
-            content += DatabaseJs.buildFields(table.fields, data.tables[i].collapsed);
-            content += "</ul>";
-
-            $( DatabaseJs.canvas ).html( $( DatabaseJs.canvas ).html() + content );
+            $( DatabaseJs.canvas ).html( $( DatabaseJs.canvas ).html() + DatabaseJs.buildTable(data.tables[i]) );
         }
 
         for(i in data.constraints){
@@ -278,6 +284,29 @@
         }
         if(collapsed){ return "<div class='rows collapsed'>" + ret + "</div>"; }else{ return "<div class='rows'>" + ret + "</div>"; }
     }
+    
+    /*
+     * DatabaseJs.buildTable 
+     *
+     *
+     *
+     */
+    DatabaseJs.buildTable = function(table){
+        var options = '<div class="table-controll" style="float: right;">';
+        options += "<span class='connect'>C</span> ";
+        options += "<span class='add_field'>+</span> ";
+        options += "<span class='table_collapse'>^</span>";
+        options += '</div>';
+
+        var content = '';
+        content += "<ul id='"+table.name+"' class='list-group db-table' style='left:"+table.left+"px; top:"+table.top+"px'>";
+        content += "<li class='list-group-item active'>"+table.name+options+"</li>";
+        content += DatabaseJs.buildFields(table.fields, data.tables[i].collapsed);
+        content += "</ul>";
+        
+        return content;
+    }
+
     /*
      * DatabaseJs.buildFields 
      *
@@ -326,8 +355,13 @@
                     "type" : $(inel).find('select').val() 
                 });
             });
+
+            if($(el).find('.rows').hasClass('collapsed')){ table.collapsed = true}
+            else{ table.collapsed = false }
+
             structure.tables.push(table)
         });
+
         $(this.canvas).find('svg').each(function (i, el){
             var dots = [];
             $(this).find('circle').each(function(i, el){
@@ -338,8 +372,8 @@
                 });
             });
             structure.constraints.push({
-                'origin': {'table': $(el).data('origintable'), 'field': $(el).data('originfield'), 'nominal':false},
-                'target': {'table': $(el).data('targettable'), 'field': $(el).data('targetfield'), 'nominal':false},
+                'origin': {'table': $(el).data('origintable'), 'field': $(el).data('originfield') },
+                'target': {'table': $(el).data('targettable'), 'field': $(el).data('targetfield') },
                 'dots':dots});
         });
         return structure;
@@ -446,7 +480,7 @@
             var x = ( $(this).position().left + $(this).width() / 2) - left;
             var y = ( $(this).position().top  + $(this).height() / 2) - top;
 
-        });
+        })
 
         //Connection scripts
         $(this).on('mousedown', 'circle:not(.origin)', function(){
@@ -454,10 +488,69 @@
             pointDragging = true;
         });
 
+        //Cancell connections ok any keypress
+        $(this).on('click', '.connect', function(e){
+            DatabaseJs.creatingPath = true;
+            DatabaseJs.originTable = $(e.currentTarget).parent().parent().parent();
+        })
+
+        $('body').on('keyup', function(e){
+            DatabaseJs.creatingPath = false;
+            DatabaseJs.originTable = null; 
+        });
+
+        $(this).on('click', function(e){
+            if( e.target.className == 'canvas'){ DatabaseJs.creatingPath = false; DatabaseJs.originTable = null; };
+        });
+
+        $(this).on('click', 'ul', function(e){
+            if(e.target.tagName == 'SPAN'){ return; }
+            if(DatabaseJs.creatingPath == false || typeof DatabaseJs.creatingPath == 'undefined' ){ return; }
+            console.log(DatabaseJs.creatingPath )
+            if(DatabaseJs.originTable == null){
+                DatabaseJs.originTable = e.currentTarget;
+            }else if( $(e.currentTarget).parent() ){
+                var fieldName = prompt('Table name', $(DatabaseJs.originTable).attr('id') + "id"); 
+                if(fieldName == null || fieldName == ''){ DatabaseJs.creatingPath = false; DatabaseJs.originTable = null; return; }
+                $('.canvas').databaseJs('createConnection', DatabaseJs.originTable, e.currentTarget, fieldName); 
+                DatabaseJs.creatingPath = null; DatabaseJs.originTable  = false;
+            }else{
+                DatabaseJs.creatingPath = null; DatabaseJs.originTable  = false;
+            }
+
+        });
+
         // DoubleClick on circle to remove-it
          $(this).on('dblclick', 'circle:not(.origin)', function(e){
             $(this).remove();
             DatabaseJs.refresh();
+        });
+
+        $(this).on('contextmenu', 'path', function(e){
+            e.preventDefault();
+            DatabaseJs.addDot(
+                (e.currentTarget.scrollLeft + e.originalEvent.clientX),
+                (e.currentTarget.scrollTop + e.originalEvent.clientY),
+                $(this),
+                $(this).parent().parent(),
+            );
+            DatabaseJs.refresh();
+        });
+
+        $(this).on('dblclick', function(e){
+            if(e.target.tagName != 'DIV'){ return; }
+            var tableName = prompt("Tablename"); 
+            if(tableName  == null || tableName == ''){ return; }
+            
+            var table = {
+                'name': tableName,
+                'top': e.currentTarget.scrollTop + e.originalEvent.clientY,
+                'left': e.currentTarget.scrollLeft + e.originalEvent.clientX,
+                'collapsed' : 'false',
+                'fields': [{'name': 'id', 'type': 'serial'}]
+            }
+         
+            $(this).html( DatabaseJs.buildTable(table) + $(this).html() );
         });
 
         // Click on the + icon on the top right
